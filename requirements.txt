@@ -1,8 +1,10 @@
 flask
+gunicorn
 openai-whisper
 transformers
 datasets
 torch
 soundfile
-numpy
+flask-cors
 jiwer
+numpy
