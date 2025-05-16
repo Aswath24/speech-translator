@@ -21,3 +21,4 @@ EXPOSE $PORT
 
 # Start the Flask app with gunicorn
 CMD ["gunicorn", "main:app", "--bind", "0.0.0.0:$PORT"]
+
