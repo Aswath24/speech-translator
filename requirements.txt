@@ -1,0 +1,8 @@
+flask
+openai-whisper
+transformers
+datasets
+torch
+soundfile
+numpy
+jiwer

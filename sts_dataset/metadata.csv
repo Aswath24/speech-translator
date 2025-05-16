@@ -1,0 +1,21 @@
+phrase_id,english_text,french_text,english_voice_label,english_wav_path,french_voice_label,french_wav_path
+phrase01,"Hello, how are you?",Bonjour comment allez-vous?,Australia_male,sts_dataset/phrase01_EN.wav,US_male,sts_dataset/phrase01_FR.wav
+phrase02,What is your name?,Quel est ton nom?,Australia_male,sts_dataset/phrase02_EN.wav,UK_female,sts_dataset/phrase02_FR.wav
+phrase03,I would like a cup of coffee.,Je voudrais une tasse de café.,Canada_female,sts_dataset/phrase03_EN.wav,UK_female,sts_dataset/phrase03_FR.wav
+phrase04,"Can you help me, please?","Pouvez-vous m'aider, s'il vous plaît ?",US_male,sts_dataset/phrase04_EN.wav,Australia_male,sts_dataset/phrase04_FR.wav
+phrase05,Where is the nearest train station?,Où est la gare ferroviaire la plus proche?,UK_female,sts_dataset/phrase05_EN.wav,US_male,sts_dataset/phrase05_FR.wav
+phrase06,I love learning new languages.,J'adore apprendre de nouvelles langues.,Canada_female,sts_dataset/phrase06_EN.wav,US_male,sts_dataset/phrase06_FR.wav
+phrase07,Do you speak French?,Parles-tu français?,India_male,sts_dataset/phrase07_EN.wav,UK_female,sts_dataset/phrase07_FR.wav
+phrase08,The weather is nice today.,Le temps est beau aujourd'hui.,India_male,sts_dataset/phrase08_EN.wav,UK_female,sts_dataset/phrase08_FR.wav
+phrase09,I am looking for a hotel.,Je cherche un hôtel.,US_male,sts_dataset/phrase09_EN.wav,Australia_male,sts_dataset/phrase09_FR.wav
+phrase10,Could you repeat that?,Pourriez-vous répéter?,UK_female,sts_dataset/phrase10_EN.wav,US_male,sts_dataset/phrase10_FR.wav
+phrase11,I need a doctor.,J'ai besoin d'un médecin.,India_male,sts_dataset/phrase11_EN.wav,US_male,sts_dataset/phrase11_FR.wav
+phrase12,How much does it cost?,Combien ça coûte?,US_male,sts_dataset/phrase12_EN.wav,US_male,sts_dataset/phrase12_FR.wav
+phrase13,Turn left at the corner.,Tournez à gauche au coin.,India_male,sts_dataset/phrase13_EN.wav,US_male,sts_dataset/phrase13_FR.wav
+phrase14,I am going to the airport.,Je vais à l'aéroport.,India_male,sts_dataset/phrase14_EN.wav,Canada_female,sts_dataset/phrase14_FR.wav
+phrase15,I don't understand.,Je ne comprends pas.,India_male,sts_dataset/phrase15_EN.wav,UK_female,sts_dataset/phrase15_FR.wav
+phrase16,Can you speak slowly?,Pouvez-vous parler lentement?,Australia_male,sts_dataset/phrase16_EN.wav,Canada_female,sts_dataset/phrase16_FR.wav
+phrase17,Nice to meet you!,Ravi de vous rencontrer!,UK_female,sts_dataset/phrase17_EN.wav,India_male,sts_dataset/phrase17_FR.wav
+phrase18,What time is it?,Quelle heure est-il?,India_male,sts_dataset/phrase18_EN.wav,India_male,sts_dataset/phrase18_FR.wav
+phrase19,I am lost.,Je suis perdu.,US_male,sts_dataset/phrase19_EN.wav,Australia_male,sts_dataset/phrase19_FR.wav
+phrase20,This is delicious!,C'est délicieux!,India_male,sts_dataset/phrase20_EN.wav,UK_female,sts_dataset/phrase20_FR.wav
