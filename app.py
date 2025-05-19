@@ -4,6 +4,7 @@ import base64
 import uuid
 import torch
 import whisper
+import subprocess
 from flask import Flask, render_template, request, jsonify, send_file
 from transformers import (
     M2M100ForConditionalGeneration,
@@ -137,27 +138,38 @@ def check_models():
 
 @app.route('/upload-audio', methods=['POST'])
 def upload_audio():
-    if not model_status["loaded"]:
-        return jsonify({"success": False, "error": "Models are not loaded yet."})
-
     try:
         target_language = request.form.get('targetLanguage', 'French')
 
-        if 'audio' in request.files:
-            audio_file = request.files['audio']
-            temp_path = os.path.join(UPLOAD_FOLDER, f"input_{uuid.uuid4()}.wav")
-            audio_file.save(temp_path)
-        else:
-            audio_data = request.form.get('audio_data')
-            if not audio_data or not audio_data.startswith('data:audio/wav;base64,'):
-                return jsonify({"success": False, "error": "Invalid audio data."})
-            audio_bytes = base64.b64decode(audio_data.replace('data:audio/wav;base64,', ''))
-            temp_path = os.path.join(UPLOAD_FOLDER, f"input_{uuid.uuid4()}.wav")
-            with open(temp_path, 'wb') as f:
+        # Handle audio from mic (base64-encoded)
+        audio_data = request.form.get('audio_data')
+        if audio_data and audio_data.startswith('data:audio/'):
+            header, encoded = audio_data.split(',', 1)
+            audio_bytes = base64.b64decode(encoded)
+
+            webm_path = f'temp_uploads/{uuid.uuid4()}.webm'
+            wav_path = webm_path.replace('.webm', '.wav')
+
+            with open(webm_path, 'wb') as f:
                 f.write(audio_bytes)
 
-        result = process_audio(temp_path, target_language)
-        os.remove(temp_path)
+            subprocess.run(['ffmpeg', '-y', '-i', webm_path, wav_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            os.remove(webm_path)
+
+            result = process_audio(wav_path, target_language)
+            os.remove(wav_path)
+
+        # Handle uploaded file
+        elif 'audio' in request.files:
+            file = request.files['audio']
+            temp_path = f'temp_uploads/{uuid.uuid4()}.wav'
+            file.save(temp_path)
+
+            result = process_audio(temp_path, target_language)
+            os.remove(temp_path)
+
+        else:
+            return jsonify({"success": False, "error": "Invalid audio data."})
 
         if result["success"]:
             return jsonify({
@@ -170,9 +182,7 @@ def upload_audio():
         else:
             return jsonify({"success": False, "error": result["error"]})
     except Exception as e:
-        logger.error(f"Upload error: {e}")
         return jsonify({"success": False, "error": str(e)})
-
 
 @app.route('/get-audio/<filename>', methods=['GET'])
 def get_audio(filename):
