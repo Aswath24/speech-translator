@@ -1,5 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Elements
+document.addEventListener('DOMContentLoaded', function () {
     const loadingScreen = document.getElementById('loadingScreen');
     const mainContainer = document.getElementById('mainContainer');
     const loadingMessage = document.getElementById('loadingMessage');
@@ -23,7 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const audioFileUpload = document.getElementById('audioFileUpload');
     const uploadFileName = document.getElementById('uploadFileName');
 
-    // Global variables
     let recorder = null;
     let audioBlob = null;
     let wavesurfer = null;
@@ -32,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let loadingProgress = 0;
     let loadingInterval = null;
 
-    // Initialize WaveSurfer
     function initWaveSurfer() {
         wavesurfer = WaveSurfer.create({
             container: '#waveform',
@@ -46,86 +43,61 @@ document.addEventListener('DOMContentLoaded', function() {
             normalize: true
         });
 
-        wavesurfer.on('finish', function() {
+        wavesurfer.on('finish', function () {
             playRecording.innerHTML = '<i class="fas fa-play"></i> Play';
         });
     }
 
-    // Initialize the recorder
+    let chunks = [];
+    let mediaRecorder = null;
+
     async function initRecorder() {
         try {
-            const constraints = { audio: true };
-            micStream = await navigator.mediaDevices.getUserMedia(constraints);
-            
-            const options = {
-                mimeType: 'audio/webm',
-                audioBitsPerSecond: 128000
-            };
-            
-            const mediaRecorder = new MediaRecorder(micStream, options);
-            let chunks = [];
-            
+            micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(micStream, { mimeType: 'audio/webm' });
+
             mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    chunks.push(e.data);
-                }
+                if (e.data.size > 0) chunks.push(e.data);
             };
-            
+
             mediaRecorder.onstop = () => {
                 audioBlob = new Blob(chunks, { type: 'audio/webm' });
                 const audioUrl = URL.createObjectURL(audioBlob);
-                
-                // Load audio into wavesurfer
                 wavesurfer.load(audioUrl);
                 waveformContainer.classList.remove('d-none');
-                
-                // Enable play button
                 playRecording.disabled = false;
+                chunks = [];
+                processAudio();
             };
-            
+
             recorder = mediaRecorder;
             return true;
         } catch (err) {
-            console.error('Error initializing recorder:', err);
-            showError(`Microphone access error: ${err.message}`);
+            console.error('Recorder error:', err);
+            showError('Microphone access denied.');
             return false;
         }
     }
 
-    // Start recording
     function startRecording() {
-        if (!recorder || recorder.state === 'recording') return;
-        
-        // Reset UI
-        hideResults();
-        hideError();
-        
-        // Start recording
+        if (!recorder) return;
+        hideResults(); hideError();
         recorder.start();
-        
-        // Update UI
         recordButton.classList.add('d-none');
         stopButton.classList.remove('d-none');
         micAnimation.classList.add('active');
     }
 
-    // Stop recording
     function stopRecording() {
         if (!recorder || recorder.state !== 'recording') return;
-        
-        // Stop recording
         recorder.stop();
-        
-        // Update UI
         recordButton.classList.remove('d-none');
         stopButton.classList.add('d-none');
         micAnimation.classList.remove('active');
     }
 
-    // Handle play button
     function togglePlayback() {
         if (!wavesurfer) return;
-        
         if (wavesurfer.isPlaying()) {
             wavesurfer.pause();
             playRecording.innerHTML = '<i class="fas fa-play"></i> Play';
@@ -135,59 +107,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Clear the recording
     function clearAudioRecording() {
-        if (wavesurfer) {
-            wavesurfer.empty();
-        }
+        if (wavesurfer) wavesurfer.empty();
         audioBlob = null;
         waveformContainer.classList.add('d-none');
         hideResults();
-        
-        // Reset file upload if exists
         if (audioFileUpload.value) {
             audioFileUpload.value = '';
             uploadFileName.classList.add('d-none');
         }
     }
 
-    // Show translation progress
     function showTranslating() {
         translatingIndicator.classList.remove('d-none');
         waveformContainer.classList.add('d-none');
     }
 
-    // Hide translation progress
     function hideTranslating() {
         translatingIndicator.classList.add('d-none');
     }
 
-    // Show results
     function showResults(data) {
         resultsSection.classList.remove('d-none');
         sourceText.textContent = data.sourceText || '';
         translatedText.textContent = data.translatedText || '';
-        
-        if (data.detectedLanguage) {
-            let langName = 'Unknown';
-            switch (data.detectedLanguage) {
-                case 'en': langName = 'English'; break;
-                case 'es': langName = 'Spanish'; break;
-                case 'fr': langName = 'French'; break;
-                case 'de': langName = 'German'; break;
-                case 'hi': langName = 'Hindi'; break;
-                case 'ta': langName = 'Tamil'; break;
-                default: langName = data.detectedLanguage;
-            }
-            detectedLanguage.textContent = `Detected: ${langName}`;
-        }
-        
-        if (data.outputPath) {
-            audioOutput.src = data.outputPath;
-        }
+        audioOutput.src = data.outputPath || '';
+        detectedLanguage.textContent = `Detected: ${data.detectedLanguage || 'Unknown'}`;
     }
 
-    // Hide results
     function hideResults() {
         resultsSection.classList.add('d-none');
         sourceText.textContent = '';
@@ -195,86 +142,69 @@ document.addEventListener('DOMContentLoaded', function() {
         audioOutput.src = '';
     }
 
-    // Show error message
     function showError(message) {
         errorSection.classList.remove('d-none');
         errorMessage.textContent = message;
     }
 
-    // Hide error message
     function hideError() {
         errorSection.classList.add('d-none');
     }
 
-    // Send audio for processing
     async function processAudio(uploadedFile = null) {
-        // If neither recorded audio nor uploaded file is available
         if (!audioBlob && !uploadedFile) {
             showError('No audio found. Please record or upload audio first.');
             return;
         }
 
         try {
-            showTranslating();
-            hideError();
-            
-            // Create FormData and append file
+            showTranslating(); hideError();
             const formData = new FormData();
             formData.append('targetLanguage', targetLanguage.value);
-            
+
             if (uploadedFile) {
-                // Use the uploaded file directly
                 formData.append('audio', uploadedFile);
-                
-                // Send to server
-                const response = await fetch('/upload-audio', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                hideTranslating();
-                
-                if (data.success) {
-                    showResults(data);
-                } else {
-                    showError(data.error || 'Unknown error occurred');
-                }
             } else {
-                // Convert blob to base64
                 const reader = new FileReader();
                 reader.readAsDataURL(audioBlob);
-                reader.onloadend = async function() {
-                    const base64Audio = reader.result;
-                    formData.append('audio_data', base64Audio);
-                    
-                    // Send to server
-                    const response = await fetch('/upload-audio', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
+                reader.onloadend = async function () {
+                    formData.append('audio_data', reader.result);
+                    const response = await fetch('/upload-audio', { method: 'POST', body: formData });
                     const data = await response.json();
                     hideTranslating();
-                    
-                    if (data.success) {
-                        showResults(data);
-                    } else {
-                        showError(data.error || 'Unknown error occurred');
-                    }
+                    data.success ? showResults(data) : showError(data.error || 'Server error');
                 };
+                return;
             }
+
+            const response = await fetch('/upload-audio', { method: 'POST', body: formData });
+            const data = await response.json();
+            hideTranslating();
+            data.success ? showResults(data) : showError(data.error || 'Server error');
+
         } catch (err) {
             hideTranslating();
             showError(`Error: ${err.message}`);
-            console.error('Error processing audio:', err);
         }
     }
 
-    // Check if models are loaded
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const fileNameSpan = uploadFileName.querySelector('span');
+        fileNameSpan.textContent = file.name;
+        uploadFileName.classList.remove('d-none');
+        hideResults(); hideError();
+        if (audioBlob) clearAudioRecording();
+        const fileURL = URL.createObjectURL(file);
+        wavesurfer.load(fileURL);
+        waveformContainer.classList.remove('d-none');
+        processAudio(file);
+    }
+
     function checkModelsLoaded() {
         fetch('/check-models')
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 if (data.loaded) {
                     isModelLoaded = true;
@@ -282,32 +212,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     mainContainer.classList.remove('d-none');
                     clearInterval(loadingInterval);
                 } else if (data.error) {
-                    loadingMessage.textContent = `Error loading models: ${data.error}`;
-                    loadingBar.style.width = '100%';
-                    loadingBar.classList.remove('progress-bar-animated', 'bg-primary');
-                    loadingBar.classList.add('bg-danger');
-                    clearInterval(loadingInterval);
+                    loadingMessage.textContent = `Model error: ${data.error}`;
                 } else {
-                    // Still loading
                     if (loadingProgress < 95) {
                         loadingProgress += 1;
                         loadingBar.style.width = `${loadingProgress}%`;
                     }
-                    
-                    // Check again in 2 seconds
                     setTimeout(checkModelsLoaded, 2000);
                 }
-            })
-            .catch(err => {
-                console.error('Error checking models:', err);
-                loadingMessage.textContent = 'Error connecting to server';
-                loadingBar.classList.remove('progress-bar-animated', 'bg-primary');
-                loadingBar.classList.add('bg-danger');
-                clearInterval(loadingInterval);
             });
     }
 
-    // Start model loading check
     function startLoadingAnimation() {
         loadingInterval = setInterval(() => {
             if (loadingProgress < 95 && !isModelLoaded) {
@@ -315,64 +230,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadingBar.style.width = `${loadingProgress}%`;
             }
         }, 300);
-        
         checkModelsLoaded();
     }
 
-    // Initialize everything
     async function initialize() {
         initWaveSurfer();
         startLoadingAnimation();
-        
-        const recorderInitialized = await initRecorder();
-        if (!recorderInitialized) {
-            showError('Could not initialize audio recorder. Please check microphone permissions.');
-        }
+        const success = await initRecorder();
+        if (!success) showError("Microphone access denied.");
     }
 
-    // Handle file upload
-    function handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        // Display the file name
-        const fileNameSpan = uploadFileName.querySelector('span');
-        fileNameSpan.textContent = file.name;
-        uploadFileName.classList.remove('d-none');
-        
-        // Reset UI
-        hideResults();
-        hideError();
-        
-        // If there's a recorded audio, clear it
-        if (audioBlob) {
-            clearAudioRecording();
-        }
-        
-        // Load the file to wavesurfer
-        const fileURL = URL.createObjectURL(file);
-        wavesurfer.load(fileURL);
-        waveformContainer.classList.remove('d-none');
-        
-        // Process the file
-        processAudio(file);
-    }
-
-    // Event listeners
     recordButton.addEventListener('click', startRecording);
     stopButton.addEventListener('click', stopRecording);
     playRecording.addEventListener('click', togglePlayback);
     clearRecording.addEventListener('click', clearAudioRecording);
-    stopButton.addEventListener('click', function() {
-        stopRecording();
-        setTimeout(() => processAudio(), 1000); // Process after a short delay
-    });
-    newTranslationButton.addEventListener('click', function() {
-        hideResults();
-        waveformContainer.classList.remove('d-none');
+    newTranslationButton.addEventListener('click', () => {
+        hideResults(); waveformContainer.classList.remove('d-none');
     });
     audioFileUpload.addEventListener('change', handleFileUpload);
 
-    // Initialize the application
     initialize();
 });
